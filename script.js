@@ -4,6 +4,13 @@ const HEIGHT = 700
 const GRAVITY = 0.9
 canvas.width = WIDTH
 canvas.height = HEIGHT
+let pressedRight = false
+let pressedLeft = false
+let score = 0
+let prevPlatform = 1
+let curPlatform = 1
+let over = false
+
 const ctx = canvas.getContext("2d")
 ctx.fillStyle = "black"
 ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -21,6 +28,7 @@ class Player {
         this.dy = 0
         this.height = 50
         this.width = 50
+        this.isJumping = false
     }
 
     render() {
@@ -33,10 +41,12 @@ class Player {
         this.x += this.dx
         this.dy += GRAVITY
 
-        clouds.forEach((cloud) => {
+        clouds.forEach((cloud, index) => {
             if (this.collide(cloud)) {
                 this.y = cloud.y - this.height
-                this.dy = 0
+                this.dy = cloud.dy
+                this.isJumping = false
+                curPlatform = index
             }
         })
 
@@ -50,7 +60,8 @@ class Player {
             this.x + this.width < platform.x ||
             this.x > platform.x + platform.width
         ) return false
-        return true
+        if (this.dy > 0) return true
+        return false
     }
 }
 
@@ -59,7 +70,7 @@ class Platform {
         this.x = x
         this.y = y
         this.dx = 0
-        this.dy = 0
+        this.dy = 2
         this.height = 10
         this.width = 200
     }
@@ -68,13 +79,23 @@ class Platform {
         ctx.fillStyle = "white"
         ctx.fillRect(this.x, this.y, this.width, this.height)
     }
+
+    update() {
+        this.y += this.dy
+        this.render()
+
+        if (this.y + this.height > canvas.height) {
+            this.y  = -10
+            this.x = Math.floor(Math.random() * 300)
+        }
+    }
 }
 
-const cloud1 = new Platform(50, 600)
-const cloud2 = new Platform(50, 500)
-const cloud3 = new Platform(50, 400)
-const cloud4 = new Platform(50, 300)
-const cloud5 = new Platform(50, 200)
+const cloud1 = new Platform(Math.floor(Math.random() * 300), 600)
+const cloud2 = new Platform(Math.floor(Math.random() * 300), 450)
+const cloud3 = new Platform(Math.floor(Math.random() * 300), 300)
+const cloud4 = new Platform(Math.floor(Math.random() * 300), 150)
+const cloud5 = new Platform(Math.floor(Math.random() * 300), 0)
 
 const clouds = [
     cloud1,
@@ -86,18 +107,80 @@ const clouds = [
 
 function renderClouds() {
     clouds.forEach((cloud) => {
-        cloud.render()
+        cloud.update()
     })
 }
 
+function gameOverCard() {
+    ctx.font = "60px Arial"
+    ctx.fillStyle = "white"
+    ctx.fillText("Game Over", 150, 300, 200)
+    ctx.fillStyle = "white"
+    ctx.fillText(`Score: ${score}`, 150, 350, 200)
+}
+
 const cat = new Player()
+cat.y = clouds[2].y + 20
+cat.x = clouds[1].x + 75
 cat.render()
 
 function gameloop() {
+    if (pressedLeft) {
+        cat.dx = -5
+    } else if (pressedRight) {
+        cat.dx = 5
+    } else {
+        cat.dx = 0
+    }
+
+    if ((curPlatform - 1 + 5) % 5 === prevPlatform) {
+        score += 1
+        prevPlatform = curPlatform
+    }
+
+    if (cat.y > canvas.height) {
+        over = true
+    }
+
     displayBackground()
+    ctx.font = "40px Arial";
+    ctx.fillStyle = "white"
+    ctx.fillText(score, 10, 40, 100)
     cat.update()
     renderClouds()
-    requestAnimationFrame(gameloop)
+    if (!over) {
+        requestAnimationFrame(gameloop)
+    } else {
+        gameOverCard()
+    }
 }
 
 requestAnimationFrame(gameloop)
+
+window.addEventListener("keydown", (e) => {
+    switch(e.key) {
+        case "w":
+            if (!cat.isJumping) {
+                cat.dy = -15
+                cat.isJumping = true
+            }
+            break
+        case "a":
+            pressedLeft = true
+            break
+        case "d":
+            pressedRight = true
+            break
+    }
+})
+
+window.addEventListener("keyup", (e) => {
+    switch(e.key) {
+        case "a":
+            pressedLeft = false
+            break
+        case "d":
+            pressedRight = false
+            break
+    }
+})
