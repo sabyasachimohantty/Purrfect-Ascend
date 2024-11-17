@@ -10,13 +10,17 @@ let score = 0
 let prevPlatform = 1
 let curPlatform = 1
 let over = false
+const cloud_img = new Image()
+cloud_img.src = "./assets/cloud.png"
+const cat_img = new Image()
+cat_img.src = "./assets/cat.png"
 
 const ctx = canvas.getContext("2d")
-ctx.fillStyle = "black"
+ctx.fillStyle = "skyblue"
 ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 function displayBackground() {
-    ctx.fillStyle = "black"
+    ctx.fillStyle = "skyblue"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 }
 
@@ -32,8 +36,9 @@ class Player {
     }
 
     render() {
-        ctx.fillStyle = "white"
+        ctx.fillStyle = "transparent"
         ctx.fillRect(this.x, this.y, this.width, this.height)
+        ctx.drawImage(cat_img, this.x - 10, this.y - 10, 75, 75)
     }
 
     update() {
@@ -78,6 +83,7 @@ class Platform {
     render() {
         ctx.fillStyle = "white"
         ctx.fillRect(this.x, this.y, this.width, this.height)
+        ctx.drawImage(cloud_img, this.x, this.y - 80, 200, 180)
     }
 
     update() {
@@ -112,6 +118,8 @@ function renderClouds() {
 }
 
 function gameOverCard() {
+    ctx.fillStyle = "black"
+    ctx.fillRect(125, 225, 250, 150)
     ctx.font = "60px Arial"
     ctx.fillStyle = "white"
     ctx.fillText("Game Over", 150, 300, 200)
@@ -146,8 +154,8 @@ function gameloop() {
     ctx.font = "40px Arial";
     ctx.fillStyle = "white"
     ctx.fillText(score, 10, 40, 100)
-    cat.update()
     renderClouds()
+    cat.update()
     if (!over) {
         requestAnimationFrame(gameloop)
     } else {
